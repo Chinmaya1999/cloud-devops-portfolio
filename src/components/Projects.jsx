@@ -152,18 +152,21 @@ const Projects = () => {
     slidesToShow: 3,
     slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 3000,
+    autoplaySpeed: 4000,
     pauseOnHover: true,
-  
+    centerMode: true,
+    centerPadding: '10px',
+    arrows: true,
     appendDots: CustomDots,
     responsive: [
       {
-        breakpoint: 1024,
+        breakpoint: 1200,
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
           infinite: true,
-          dots: true
+          dots: true,
+          centerMode: false
         }
       },
       {
@@ -171,30 +174,43 @@ const Projects = () => {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
-          initialSlide: 1
+          initialSlide: 0,
+          centerMode: true,
+          centerPadding: '20px',
+          arrows: false
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          centerMode: true,
+          centerPadding: '10px',
+          arrows: false
         }
       }
     ]
   };
 
   return (
-    <section id="projects" className="py-20 bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className=" mx-auto px-6 sm:px-8 lg:px-10">
-        <div className="container">
-          <h2 className="text-5xl font-bold text-gray-900 mb-4 relative inline-block">
+    <section id="projects" className="py-12 md:py-20 bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 relative inline-block">
             <span className="relative z-10">My Projects</span>
             <span className="absolute bottom-0 left-0 w-full h-3 bg-blue-100 -z-0 opacity-70 transform -rotate-1"></span>
           </h2>
-          <p className="text-xl text-gray-600 mt-6 leading-relaxed">A showcase of my recent work and contributions to various projects</p>
+          <p className="text-lg sm:text-xl text-gray-600 mt-4 sm:mt-6 leading-relaxed">A showcase of my recent work and contributions to various projects</p>
         </div>
         
-        <div className="relative px-0 sm:px-8 py-8">
+        <div className="relative px-2 sm:px-4 py-6 sm:py-8">
           <div className="absolute inset-0 bg-white/30 backdrop-blur-sm rounded-2xl -inset-x-4 -z-10"></div>
           <Slider {...settings}>
             {projects.map((project, index) => (
-              <div key={index} className="px-2">
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1 border border-gray-100">
-                  <div className="p-6 sm:p-8 flex-1 flex flex-col">
+              <div key={index} className="px-1 sm:px-2">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1 border border-gray-100 mx-1 sm:mx-2">
+                  <div className="p-4 sm:p-6 md:p-8 flex-1 flex flex-col">
                     <div className="flex items-start justify-between mb-6">
                       <div className="flex items-center">
                         {project.icon && (
