@@ -1,12 +1,138 @@
-import React, { useState } from 'react';
-import { FaAws, FaDocker, FaGithub, FaCertificate } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { FaAws, FaDocker, FaGithub, FaCertificate, FaAward, FaGraduationCap } from 'react-icons/fa';
+import { motion, useAnimation, AnimatePresence } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Box, Sphere, Float, PerspectiveCamera, Stars, Trail, Torus } from '@react-three/drei';
+import '../App.css';
+
+// 3D Floating Certificate Component
+function FloatingCert({ position, color }) {
+  const meshRef = useRef();
+  
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x = state.clock.elapsedTime * 0.1;
+      meshRef.current.rotation.y = state.clock.elapsedTime * 0.2;
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + position[0]) * 0.3;
+    }
+  });
+
+  return (
+    <Float speed={2} rotationIntensity={0.4} floatIntensity={0.4}>
+      <Torus ref={meshRef} args={[0.8, 0.3, 16, 32]} position={position}>
+        <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
+      </Torus>
+    </Float>
+  );
+}
+
+// 3D Scene Component
+function Scene3D() {
+  return (
+    <>
+      <PerspectiveCamera makeDefault position={[0, 0, 10]} />
+      <OrbitControls enableZoom={false} enablePan={false} maxPolarAngle={Math.PI / 2} />
+      <Stars radius={100} depth={50} count={1800} factor={4} saturation={0} fade speed={1} />
+      
+      <ambientLight intensity={0.3} />
+      <pointLight position={[10, 10, 10]} intensity={1} />
+      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#f59e0b" />
+      <pointLight position={[0, 10, -10]} intensity={0.3} color="#10b981" />
+      
+      <FloatingCert position={[-3, 2, 0]} color="#f59e0b" />
+      <FloatingCert position={[3, -1, -2]} color="#3b82f6" />
+      <FloatingCert position={[0, 0, 2]} color="#10b981" />
+      <FloatingCert position={[-2, -2, -2]} color="#ef4444" />
+      <FloatingCert position={[2, 3, 1]} color="#8b5cf6" />
+    </>
+  );
+}
+
+// Animated Certification Card Component
+function CertificationCard({ cert, index, delay }) {
+  const [ref, inView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{ delay, duration: 0.6, type: "spring" }}
+      whileHover={{ 
+        scale: 1.05, 
+        y: -10,
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+      }}
+      className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 h-full flex flex-col"
+    >
+      <div className="flex items-center mb-4">
+        <motion.div 
+          className="bg-gradient-to-br from-orange-500 to-amber-500 p-3 rounded-xl mr-4"
+          whileHover={{ rotate: 360, scale: 1.1 }}
+          transition={{ duration: 0.5 }}
+        >
+          {cert.icon}
+        </motion.div>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-white">{cert.title}</h3>
+          <p className="text-sm text-gray-300">{cert.issuer}</p>
+        </div>
+      </div>
+      
+      <div className="text-sm text-gray-400 mb-3">{cert.date}</div>
+      
+      <p className="text-gray-300 text-sm flex-grow mb-4">{cert.description}</p>
+      
+      <motion.div 
+        className="pt-4 border-t border-white/10"
+        initial={{ opacity: 0 }}
+        animate={inView ? { opacity: 1 } : {}}
+        transition={{ delay: delay + 0.3 }}
+      >
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+          Verified
+        </span>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 const Certification = () => {
   const [activeTab, setActiveTab] = useState('aws');
+  const controls = useAnimation();
+  const [ref, inView] = useInView({
+    threshold: 0.1,
+    triggerOnce: true,
+  });
+
+  useEffect(() => {
+    if (inView) {
+      controls.start('visible');
+    }
+  }, [controls, inView]);
 
   const certifications = {
     aws: [
+      {
+        id: 7,
+        title: 'AWS Certified Cloud Practitioner',
+        issuer: 'Amazon Web Services',
+        date: 'Issued: Nov 2026',
+        description: 'Demonstrated understanding of AWS Cloud services, architecture, and best practices',
+        icon: <FaAws className="text-orange-500 text-2xl" />
+      },
+      {
+        id: 8,
+        title: 'AWS Certified Solutions Architect - Associate',
+        issuer: 'Amazon Web Services',
+        date: 'Issued: Dec 2026',
+        description: 'Designed and deployed distributed systems on AWS with high availability and scalability',
+        icon: <FaAws className="text-orange-500 text-2xl" />
+      },
       {
         id: 1,
         title: 'AWS Cloud Quest: Cloud Practitioner',
@@ -39,26 +165,10 @@ const Certification = () => {
         description: 'Explored serverless computing concepts and AWS Lambda',
         icon: <FaAws className="text-orange-500 text-2xl" />
       },
-      {
-        id: 5,
-        title: 'AWS Educate: Storage',
-        issuer: 'Amazon Web Services Training and Certification',
-        date: 'Issued: Nov 2025',
-        description: 'Learned about AWS storage solutions and best practices',
-        icon: <FaAws className="text-orange-500 text-2xl" />
-      },
-      {
-        id: 6,
-        title: 'AWS Educate: Introduction to Cloud 101',
-        issuer: 'Amazon Web Services Training and Certification',
-        date: 'Issued: Dec 2025',
-        description: 'Fundamental understanding of cloud computing concepts',
-        icon: <FaAws className="text-orange-500 text-2xl" />
-      },
     ],
     other: [
       {
-        id: 7,
+        id: 9,
         title: 'Docker Essentials: A Developer Introduction',
         issuer: 'IBM',
         date: 'Issued: Nov 2025',
@@ -66,7 +176,7 @@ const Certification = () => {
         icon: <FaDocker className="text-blue-500 text-2xl" />
       },
       {
-        id: 8,
+        id: 10,
         title: 'GitHub for Open Standards Development',
         issuer: 'The Linux Foundation',
         date: 'Issued: Nov 2025',
@@ -90,98 +200,155 @@ const Certification = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
+    <section id="certifications" className="min-h-screen flex items-center relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+      {/* 3D Canvas Background */}
+      <div className="absolute inset-0 -z-10">
+        <Canvas>
+          <Scene3D />
+        </Canvas>
+      </div>
+
+      {/* Animated gradient overlays */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <motion.div 
+          className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-orange-500/20 to-transparent rounded-full filter blur-3xl"
+          animate={{
+            x: [0, 70, 0],
+            y: [0, -70, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-amber-500/20 to-transparent rounded-full filter blur-3xl"
+          animate={{
+            x: [0, -70, 0],
+            y: [0, 70, 0],
+          }}
+          transition={{
+            duration: 16,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <motion.div 
+          ref={ref}
+          initial="hidden"
+          animate={controls}
+          variants={containerVariants}
+          className="space-y-12"
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Certifications & Badges</h1>
-          <p className="text-xl text-gray-600">My professional credentials and learning achievements</p>
-        </motion.div>
-
-        {/* Tabs */}
-        <div className="flex justify-center mb-8 border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab('aws')}
-            className={`px-6 py-3 font-medium text-sm rounded-t-lg transition-colors duration-200 ${
-              activeTab === 'aws' 
-                ? 'text-orange-600 border-b-2 border-orange-500 bg-white shadow-sm' 
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <div className="flex items-center">
-              <FaAws className="mr-2" /> AWS Certifications
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('other')}
-            className={`px-6 py-3 font-medium text-sm rounded-t-lg transition-colors duration-200 ${
-              activeTab === 'other' 
-                ? 'text-blue-600 border-b-2 border-blue-500 bg-white shadow-sm' 
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <div className="flex items-center">
-              <FaCertificate className="mr-2" /> Other Certifications
-            </div>
-          </button>
-        </div>
-
-        {/* Certifications Grid */}
-        <AnimatePresence mode="wait">
+          {/* Header */}
           <motion.div
-            key={activeTab}
-            variants={tabVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="text-center"
           >
-            {certifications[activeTab].map((cert) => (
-              <motion.div
-                key={cert.id}
-                whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
-              >
-                <div className="p-6 h-full flex flex-col">
-                  <div className="flex items-center mb-4">
-                    <div className="p-3 rounded-lg bg-gray-50 mr-4">
-                      {cert.icon}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{cert.title}</h3>
-                      <p className="text-sm text-gray-500">{cert.issuer}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-500">{cert.date}</div>
-                  <p className="mt-3 text-gray-600 text-sm flex-grow">{cert.description}</p>
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      Verified
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Certifications & <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-400">Badges</span>
+            </h1>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+              My professional credentials and learning achievements in cloud technologies and DevOps practices
+            </p>
           </motion.div>
-        </AnimatePresence>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-12 text-center"
-        >
-          <p className="text-gray-600">
-            Continuously expanding my knowledge in cloud technologies and DevOps practices.
-          </p>
+          {/* Tabs */}
+          <motion.div 
+            className="flex justify-center mb-8 border-b border-white/20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
+            <motion.button
+              onClick={() => setActiveTab('aws')}
+              className={`px-6 py-3 font-medium text-sm rounded-t-lg transition-all duration-300 ${
+                activeTab === 'aws' 
+                  ? 'text-orange-400 border-b-2 border-orange-500 bg-white/10 shadow-lg' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="flex items-center">
+                <FaAws className="mr-2" /> AWS Certifications
+              </div>
+            </motion.button>
+            <motion.button
+              onClick={() => setActiveTab('other')}
+              className={`px-6 py-3 font-medium text-sm rounded-t-lg transition-all duration-300 ${
+                activeTab === 'other' 
+                  ? 'text-blue-400 border-b-2 border-blue-500 bg-white/10 shadow-lg' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="flex items-center">
+                <FaCertificate className="mr-2" /> Other Certifications
+              </div>
+            </motion.button>
+          </motion.div>
+
+          {/* Certifications Grid */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              variants={tabVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {certifications[activeTab].map((cert, index) => (
+                <CertificationCard 
+                  key={cert.id}
+                  cert={cert}
+                  index={index}
+                  delay={0.6 + index * 0.1}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Footer Message */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 0.6 }}
+            className="text-center pt-8"
+          >
+            <motion.div 
+              className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/20"
+              whileHover={{ scale: 1.05 }}
+            >
+              <FaGraduationCap className="text-orange-400 text-xl" />
+              <p className="text-gray-300">
+                Continuously expanding my knowledge in cloud technologies and DevOps practices
+              </p>
+            </motion.div>
+          </motion.div>
         </motion.div>
       </div>
-    </div>
+    </section>
   );
 };
 
